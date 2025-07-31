@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personality Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .range-container input[type="range"] {
+            flex: 1;
+        }
+
+        .range-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .result.extrovert {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+        }
+
+        .result.introvert {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .personality-type {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .probability {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Personality Classifier</h1>
+        
+        <form id="personalityForm">
+            <div class="form-group">
+                <label for="time_spent_alone">Time Spent Alone (0-10 hours/day)</label>
+                <div class="range-container">
+                    <input type="range" id="time_spent_alone" name="time_spent_alone" min="0" max="10" step="0.5" value="5">
+                    <span class="range-value" id="time_spent_alone_value">5</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="stage_fear">Stage Fear</label>
+                <select id="stage_fear" name="stage_fear">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="social_event_attendance">Social Event Attendance (0-10 times/month)</label>
+                <div class="range-container">
+                    <input type="range" id="social_event_attendance" name="social_event_attendance" min="0" max="10" step="0.5" value="5">
+                    <span class="range-value" id="social_event_attendance_value">5</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="going_outside">Going Outside (0-7 times/week)</label>
+                <div class="range-container">
+                    <input type="range" id="going_outside" name="going_outside" min="0" max="7" step="0.5" value="3.5">
+                    <span class="range-value" id="going_outside_value">3.5</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="drained_after_socializing">Drained After Socializing</label>
+                <select id="drained_after_socializing" name="drained_after_socializing">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="friends_circle_size">Friends Circle Size (0-15 people)</label>
+                <div class="range-container">
+                    <input type="range" id="friends_circle_size" name="friends_circle_size" min="0" max="15" step="0.5" value="7.5">
+                    <span class="range-value" id="friends_circle_size_value">7.5</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="post_frequency">Post Frequency (0-10 posts/week)</label>
+                <div class="range-container">
+                    <input type="range" id="post_frequency" name="post_frequency" min="0" max="10" step="0.5" value="5">
+                    <span class="range-value" id="post_frequency_value">5</span>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">🔮 Predict Personality</button>
+        </form>
+
+        <div class="loading" id="loading" style="display: none;">
+            Analyzing your personality traits...
+        </div>
+
+        <div class="result" id="result">
+            <div class="personality-type" id="personalityType"></div>
+            <div class="probability" id="probability"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        // Update range values in real-time
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            const valueDisplay = document.getElementById(input.id + '_value');
+            input.addEventListener('input', () => {
+                valueDisplay.textContent = input.value;
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('personalityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+            
+            // Show loading
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            error.style.display = 'none';
+            
+            // Collect form data
+            const formData = {
+                time_spent_alone: document.getElementById('time_spent_alone').value,
+                stage_fear: document.getElementById('stage_fear').value,
+                social_event_attendance: document.getElementById('social_event_attendance').value,
+                going_outside: document.getElementById('going_outside').value,
+                drained_after_socializing: document.getElementById('drained_after_socializing').value,
+                friends_circle_size: document.getElementById('friends_circle_size').value,
+                post_frequency: document.getElementById('post_frequency').value
+            };
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Display result
+                const personalityType = document.getElementById('personalityType');
+                const probability = document.getElementById('probability');
+                const progressFill = document.getElementById('progressFill');
+                
+                personalityType.textContent = data.prediction;
+                probability.textContent = `Confidence: ${(Math.max(data.probability.Extrovert, data.probability.Introvert) * 100).toFixed(1)}%`;
+                
+                const confidence = Math.max(data.probability.Extrovert, data.probability.Introvert) * 100;
+                progressFill.style.width = confidence + '%';
+                
+                result.className = 'result ' + data.prediction.toLowerCase();
+                result.style.display = 'block';
+                
+            } catch (err) {
+                error.textContent = 'Error: ' + err.message;
+                error.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
